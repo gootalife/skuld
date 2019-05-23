@@ -12,7 +12,7 @@ sess = tf.Session(config=config)
 
 input_array = np.array([[0, 1, 2, 3, 4], [5, 1, 2, 3, 6]]) #入力
 vocab_size = 2000  #単語上限
-dim = 128
+dim = 128 #ベクトルの次元数
 #列長vocab_sizeの配列の末尾を0埋め&切り詰め
 input_array = keras.preprocessing.sequence.pad_sequences(
     input_array,
