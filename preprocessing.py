@@ -2,18 +2,15 @@ from tensorflow import keras
 import collections
 import glob
 import setting
+import os
 
 #ソースコード読み込み
-def readAllSourceCodes(directory):
-    fileList = sorted(glob.glob(directory))
+def readAllSourceCodes(directory, extension):
+    fileList = sorted(glob.glob('{0}/*.{1}'.format(directory, extension)))
     sourceCodes = []
     for fileName in fileList:
-        with open(fileName, 'r') as input:
-            sourceCofileList = sorted(glob.glob(directory))
-    sourceCodes = []
-    for fileName in fileList:
-        with open(fileName, 'r') as input:
-            sourceCodes.append(input.read())
+        with open(fileName, 'r') as file:
+            sourceCodes.append(file.read().rstrip('\n')) # 末尾改行削除
     return sourceCodes
 
 #ベクトル化
@@ -33,7 +30,7 @@ def vectorize(sourceCodes):
 def makeCorpus(vocabulary, directory):
     corpus = collections.OrderedDict()
     num = 1 #各単語の添字
-    threshold = 1 #対応値割り当ての閾値
+    threshold = 2 #対応値割り当ての閾値
     for key,val in vocabulary.items():
         if val >= threshold:
             corpus[key] = num
@@ -43,11 +40,29 @@ def makeCorpus(vocabulary, directory):
     #出力
     with open(directory, 'w') as file: #出力先
         for key,val in corpus.items():
-            print(key,val)
-            file.write(key + "," + str(corpus[key]) + "\n")
+            file.write('{0},{1},{2}\n'.format(key, str(corpus[key]), vocabulary[key]))
+    return corpus
 
-if __name__ == '__main__'
-    extension = setting.get('settings.ini', 'FileInfo', 'extension')
-    sourceCodes = readAllSourceCodes('data/lscp/out/*.{0}'.format(extension))
+def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
+    fileList = sorted(glob.glob('{0}/*.{1}'.format(inDirectory, extension)))
+    index = 0
+    for sourceCode in sourceCodes:
+        convertedCode = []
+        for word in sourceCode.split('\n'):
+            if word in corpus:
+                convertedCode.append(corpus[word])
+            else:
+                convertedCode.append(0)
+        fileName = os.path.basename(fileList[index])
+        with open('{0}/{1}'.format(outDirectory, fileName), 'w') as file:  #出力先
+            for code in convertedCode:
+                file.write('{0}\n'.format(code))
+        index += 1
+
+
+if __name__ == '__main__':
+    extension = setting.get('settings.ini', 'Info', 'extension')
+    sourceCodes = readAllSourceCodes('data/lscp/out', extension)
     vocabulary = vectorize(sourceCodes)
-    makeCorpus(vocabulary, 'data/preprocess/corpus.csv')
+    corpus = makeCorpus(vocabulary, 'data/preprocess/corpus.csv')
+    convert(corpus, sourceCodes, 'data/lscp/out', 'data/preprocess/converted', extension)
