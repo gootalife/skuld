@@ -5,7 +5,7 @@ import multiprocessing as mp
 import setting
 import glob
 
-#ソースコード読み込み
+# ソースコード読み込み
 def readAllConvertedCodes(directory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(directory, extension)))
     print(fileList)
@@ -17,10 +17,10 @@ def readAllConvertedCodes(directory, extension):
     return sourceCodes
 
 def embed(convertedCodes):
-    input_array = np.array(convertedCodes) #入力
-    vocab_size = 2000  #単語上限
-    dim = 128 #ベクトルの次元数
-    #列長vocab_sizeの配列の末尾を0埋め&切り詰め
+    input_array = np.array(convertedCodes) # 入力
+    vocab_size = 2000  # 単語上限
+    dim = 128 # ベクトルの次元数
+    # 列長vocab_sizeの配列の末尾を0埋め&切り詰め
     input_array = keras.preprocessing.sequence.pad_sequences(
         input_array,
         maxlen=vocab_size,
@@ -31,7 +31,7 @@ def embed(convertedCodes):
 
     print(input_array)
     np.save('input.npy', input_array) # 保存
-    #Embeddingレイヤー指定
+    # Embeddingレイヤー指定
     model = keras.Sequential()
     model.add(keras.layers.Embedding(vocab_size, dim, mask_zero=True))
     model.compile(optimizer='adam', loss='mse')

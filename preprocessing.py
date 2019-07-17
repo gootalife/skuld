@@ -4,7 +4,7 @@ import glob
 import setting
 import os
 
-#ソースコード読み込み
+# ソースコード読み込み
 def readAllSourceCodes(directory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(directory, extension)))
     sourceCodes = []
@@ -13,36 +13,37 @@ def readAllSourceCodes(directory, extension):
             sourceCodes.append(file.read().rstrip('\n')) # 末尾改行削除
     return sourceCodes
 
-#ベクトル化
+# ベクトル化
 def vectorize(sourceCodes):
     tokens = []
     tokenizer = keras.preprocessing.text.Tokenizer()
     for sourceCode in sourceCodes:
         tokens.append(keras.preprocessing.text.text_to_word_sequence(sourceCode))
     tokenizer.fit_on_texts(tokens)
-    #出現数順(降順)にソート
+    # 出現数順(降順)にソート
     vocabulary = collections.OrderedDict(
         sorted(tokenizer.word_counts.items(), key=lambda x: x[1], reverse=True)
     )
     return vocabulary
 
-#コーパスの作成
+# コーパスの作成
 def makeCorpus(vocabulary, directory):
     corpus = collections.OrderedDict()
-    num = 1 #各単語の添字
-    threshold = 2 #対応値割り当ての閾値
+    num = 1 # 各単語の添字
+    threshold = 2 # 対応値割り当ての閾値
     for key,val in vocabulary.items():
         if val >= threshold:
             corpus[key] = num
         else:
             corpus[key] = 0
         num += 1
-    #出力
-    with open(directory, 'w') as file: #出力先
+    # 出力
+    with open(directory, 'w') as file:
         for key,val in corpus.items():
             file.write('{0},{1},{2}\n'.format(key, str(corpus[key]), vocabulary[key]))
     return corpus
 
+# ソースコード片の数値変換
 def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(inDirectory, extension)))
     index = 0
@@ -54,11 +55,11 @@ def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
             else:
                 convertedCode.append(0)
         fileName = os.path.basename(fileList[index])
-        with open('{0}/{1}'.format(outDirectory, fileName), 'w') as file:  #出力先
+        # 出力
+        with open('{0}/{1}'.format(outDirectory, fileName), 'w') as file:
             for code in convertedCode:
                 file.write('{0}\n'.format(code))
         index += 1
-
 
 if __name__ == '__main__':
     extension = setting.get('settings.ini', 'Info', 'extension')
