@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding
 import multiprocessing as mp
 import setting
 import glob
@@ -8,7 +10,6 @@ import glob
 # ソースコード読み込み
 def readAllConvertedCodes(directory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(directory, extension)))
-    print(fileList)
     sourceCodes = []
     for fileName in fileList:
         with open(fileName, 'r') as file:
@@ -29,16 +30,16 @@ def embed(convertedCodes):
         truncating='post',
         value=0)
 
-    print(input_array)
-    np.save('input.npy', input_array) # 保存
+    # print(input_array)
+    np.save('embedding_input.npy', input_array) # 保存
     # Embeddingレイヤー指定
-    model = keras.Sequential()
-    model.add(keras.layers.Embedding(vocab_size, dim, mask_zero=True))
-    model.compile(optimizer='adam', loss='mse')
+    model = Sequential()
+    model.add(Embedding(vocab_size, dim, mask_zero=True))
+    model.compile(optimizer='rmsprop', loss='mse')
     output_array = model.predict(input_array)
     # print(output_array)
-    np.save('output.npy', output_array)  # 保存
-    print(np.load('output.npy'))
+    np.save('embedding_matrix.npy', output_array)  # 保存
+    # print(np.load('embedding_matrix.npy'))
 
 if __name__ == '__main__':
     #コア数の取得(CPU)
