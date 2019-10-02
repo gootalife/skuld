@@ -34,7 +34,10 @@ def embed(convertedCodes):
     np.save('embedding_input.npy', input_array) # 保存
     # Embeddingレイヤー指定
     model = Sequential()
-    model.add(Embedding(vocab_size, dim, mask_zero=True))
+    model.add(Embedding(input_dim=vocab_size,
+                        output_dim=dim,
+                        input_length=vocab_size
+                        mask_zero=True))
     model.compile(optimizer='rmsprop', loss='mse')
     output_array = model.predict(input_array)
     # print(output_array)

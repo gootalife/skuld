@@ -2,8 +2,7 @@ import numpy as np
 
 if __name__ == '__main__':
     codes_count = 1
-    code_len = 2000
-    courpus_len = 1000
+    courpus_len = 2000
     matrix = np.load('embedding_matrix.npy')
     table = np.zeros((courpus_len, 128))
     codes = np.load('convertedCodes.npy')
