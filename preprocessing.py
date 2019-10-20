@@ -3,6 +3,7 @@ import collections
 import glob
 import setting
 import os
+import numpy as np
 
 # ソースコード読み込み
 def readAllSourceCodes(directory, extension):
@@ -56,14 +57,16 @@ def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
                 convertedCode.append(0)
         fileName = os.path.basename(fileList[index])
         # 出力
-        with open('{0}/{1}'.format(outDirectory, fileName), 'w') as file:
-            for code in convertedCode:
-                file.write('{0}\n'.format(code))
+        np.savetxt('{0}/{1}'.format(outDirectory, fileName), convertedCode, fmt='%d')
+        # with open('{0}/{1}'.format(outDirectory, fileName), 'w') as file:
+        #     for code in convertedCode:
+        #         file.write('{0}\n'.format(code))
         index += 1
 
 if __name__ == '__main__':
     extension = setting.get('settings.ini', 'Info', 'extension')
-    sourceCodes = readAllSourceCodes('data/lscp/out', extension)
+    projectName = setting.get('settings.ini', 'Info', 'project')
+    sourceCodes = readAllSourceCodes('data/projects/{0}/logs/preprocessed'.format(projectName), extension)
     vocabulary = vectorize(sourceCodes)
-    corpus = makeCorpus(vocabulary, 'data/preprocess/corpus.csv')
-    convert(corpus, sourceCodes, 'data/lscp/out', 'data/preprocess/converted', extension)
+    corpus = makeCorpus(vocabulary, 'data/projects/{0}/corpus.csv'.format(projectName))
+    convert(corpus, sourceCodes, 'data/projects/{0}/logs/preprocessed'.format(projectName), 'data/projects/{0}/logs/converted'.format(projectName), extension)

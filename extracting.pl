@@ -3,8 +3,8 @@ use lscp;
 my $preprocessor = lscp->new;
 
 $preprocessor->setOption("logLevel", "error");
-$preprocessor->setOption("inPath", "data/lscp/in");
-$preprocessor->setOption("outPath", "data/lscp/out");
+$preprocessor->setOption("inPath", $ARGV[0]);
+$preprocessor->setOption("outPath", $ARGV[1]);
 
 $preprocessor->setOption("isCode", 1); #コードを対象とする
 $preprocessor->setOption("doComments", 0); #コメントを除去

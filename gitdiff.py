@@ -25,7 +25,7 @@ def getGitDiff(commitHash, fileName):
     for index, line in enumerate(diff):
         if index <= 3 or line.startswith('@@') or line.startswith('-'):
             continue;
-        print(line)
+        # print(line)
         if line.startswith('+'):
             line = line.replace('+', '', 1)
         else:
@@ -42,27 +42,31 @@ def getGitDiff(commitHash, fileName):
     return codeStr
 
 # 各コミットハッシュの変更の取得
-def getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension):
-    # git diffの取得
-    for commitHash in commitLogs.commit_hash:
+def getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension, projectName):
+    for index, item in commitLogs.iterrows():
+        print(str(index + 1) + '/' + str(len(commitLogs))) # 進行状況
+        commitHash = item['commit_hash']
+        containsBug = item['contains_bug']
         # 対象プロジェクトのディレクトリに移動
         os.chdir(projectDirectory)
         fileList = getFilelist(commitHash)
         # 変更の取得
         code = ''
         for fileName in fileList:
-            # 拡張子が指定のものだけ
             os.chdir(projectDirectory)
-            if fileName.endswith('.{0}'.format(extension)):
-                # print(fileName)
-                # カレントディレクトリへ移動
+            if fileName.endswith('.{0}'.format(extension)): # 拡張子が指定のものだけ
                 code += getGitDiff(commitHash, fileName)
-            os.chdir(currentDirectory)
+            os.chdir(currentDirectory) # カレントディレクトリへ移動
         # 出力
-        with open('data/lscp/in/{0}.{1}'.format(commitHash, extension), 'w') as file:
+        with open('data/projects/{0}/logs/commits/{1}.{2}'.format(projectName, commitHash, extension), 'w') as file:
             file.write(code)
-        # print('\n------ ' + commitHash + ' ------\n')
-        # print(code)
+        with open('data/projects/{0}/logs/labels/{1}.txt'.format(projectName ,commitHash), 'w') as file:
+            if containsBug:
+                file.write('1')
+            else:
+                file.write('0')
+
+
 
 if __name__ == '__main__':
     argc = len(sys.argv)
@@ -72,9 +76,14 @@ if __name__ == '__main__':
     # commit履歴csvの読み込み
     extension = setting.get('settings.ini', 'Info', 'extension')
     projectName = setting.get('settings.ini', 'Info', 'project')
-    commitLogs = pd.read_csv('data/projects/{0}.csv'.format(projectName))
+    # プロジェクトごとに必要なデータ保存用フォルダの作成
+    os.makedirs('data/projects/{0}/logs/commits'.format(projectName), exist_ok=True)
+    os.makedirs('data/projects/{0}/logs/labels'.format(projectName), exist_ok=True)
+    os.makedirs('data/projects/{0}/logs/converted'.format(projectName), exist_ok=True)
+    os.makedirs('data/projects/{0}/logs/preprocessed'.format(projectName), exist_ok=True)
+    commitLogs = pd.read_csv('data/projects/{0}/{1}.csv'.format(projectName, projectName))
     # ディレクトリ情報の保持
     currentDirectory = os.getcwd()
     projectDirectory = sys.argv[1]
     # git diffの複数取得
-    getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension)
+    getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension, projectName)
