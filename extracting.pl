@@ -1,10 +1,20 @@
 use lscp;
+use Config::Tiny;
 
 my $preprocessor = lscp->new;
+# 設定ファイルの読み込み
+my $settings = Config::Tiny->read('settings.ini');
+# 値へのアクセス
+my $projectName = $settings->{Info}->{project};
+
+if (@ARGV != 1) {
+    print "arg error: Input a target project name.";
+    exit(0);
+}
 
 $preprocessor->setOption("logLevel", "error");
-$preprocessor->setOption("inPath", $ARGV[0]);
-$preprocessor->setOption("outPath", $ARGV[1]);
+$preprocessor->setOption("inPath", "data/projects/" . $projectName . "/logs/commits");
+$preprocessor->setOption("outPath", "data/projects/" . $projectName . "/logs/preprocessed");
 
 $preprocessor->setOption("isCode", 1); #コードを対象とする
 $preprocessor->setOption("doComments", 0); #コメントを除去

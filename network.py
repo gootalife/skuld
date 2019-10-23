@@ -91,7 +91,9 @@ if __name__ == '__main__':
     model.compile(optimizer='adam',
                 loss='binary_crossentropy',
                 metrics=['accuracy'])
-    plot_model(model, to_file='data/models/model.png') # モデル画像の出力
+    plot_model(model, # モデル画像の出力
+            to_file='data/models/model.png',
+            show_shapes=True)
     history = model.fit(x_train, y_train,
             batch_size=64,
             epochs=15,

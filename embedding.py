@@ -41,12 +41,12 @@ def embed(convertedCodes):
     output_array = model.predict(input_array)
     np.save('embedding_matrix.npy', output_array)  # 保存
 
-def vectorMapping():
+def vectorMapping(convertedCodes):
     codes_count = 1
     courpus_len = 2000
     matrix = np.load('embedding_matrix.npy')
     table = np.zeros((courpus_len, 128))
-    codes = np.load('convertedCodes.npy')
+    codes = convertedCodes
 
     for i in range(codes_count): # ファイル数回
         for j in range(len(codes[i])): # 各ファイルの要素数回
