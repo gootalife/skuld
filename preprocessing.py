@@ -31,7 +31,7 @@ def vectorize(sourceCodes):
 def makeCorpus(vocabulary, directory):
     corpus = collections.OrderedDict()
     num = 1 # 各単語の添字
-    threshold = 2 # 対応値割り当ての閾値
+    threshold = 0 # 対応値割り当ての閾値
     for key,val in vocabulary.items():
         if val >= threshold:
             corpus[key] = num

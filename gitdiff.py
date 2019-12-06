@@ -6,8 +6,10 @@ import setting
 
 # ファイル一覧の取得
 def getFilelist(commitHash):
-    # command = 'git checkout {0}'.format(commitHash)
-    # subprocess.run(command.split(), stdout=subprocess.PIPE)
+    command = 'git checkout {0}'.format(commitHash)
+    subprocess.run(command.split())
+    command = 'git checkout .'
+    subprocess.run(command.split())
     # コマンドを実行し、結果を受け取る。
     command = 'git diff --name-only --diff-filter=d {0}^ {1}'.format(commitHash, commitHash)
     result = subprocess.run(command.split(), stdout=subprocess.PIPE)
@@ -18,14 +20,16 @@ def getFilelist(commitHash):
 def getGitDiff(commitHash, fileName):
     # コマンドを実行し、結果を受け取る。
     command = 'git --no-pager diff -U3 -w --ignore-blank-lines {0}^ {1} {2}'.format(commitHash, commitHash, fileName)
+    # result = subprocess.run(command.split(), stdout=subprocess.PIPE, universal_newlines=True, encoding='utf-8')
     result = subprocess.run(command.split(), stdout=subprocess.PIPE)
-    diff = result.stdout.decode().split('\n')
+    diff = result.stdout.decode('utf-8', 'ignore').split('\n')
+    # diff = result.stdout.decode('shift_jis').split('\n')
+    # diff = result.stdout.split('\n')
     code = []
     # print(result.stdout.decode() + '\n')
     for index, line in enumerate(diff):
         if index <= 3 or line.startswith('@@') or line.startswith('-'):
             continue;
-        # print(line)
         if line.startswith('+'):
             line = line.replace('+', '', 1)
         else:
@@ -44,7 +48,9 @@ def getGitDiff(commitHash, fileName):
 # 各コミットハッシュの変更の取得
 def getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension, projectName):
     for index, item in commitLogs.iterrows():
-        print(str(index + 1) + '/' + str(len(commitLogs))) # 進行状況
+        # if index < 30785:
+        #     continue
+        print(str(index + 1) + '/' + str(len(commitLogs)))  # 進行状況
         commitHash = item['commit_hash']
         containsBug = item['contains_bug']
         # 対象プロジェクトのディレクトリに移動
@@ -56,15 +62,18 @@ def getGitDiffs(commitLogs, currentDirectory, projectDirectory, extension, proje
             os.chdir(projectDirectory)
             if fileName.endswith('.{0}'.format(extension)): # 拡張子が指定のものだけ
                 code += getGitDiff(commitHash, fileName)
-            os.chdir(currentDirectory) # カレントディレクトリへ移動
+            os.chdir(currentDirectory)  # カレントディレクトリへ移動
+        os.chdir(currentDirectory) # カレントディレクトリへ移動
         # 出力
-        with open('data/projects/{0}/logs/commits/{1}.{2}'.format(projectName, commitHash, extension), 'w') as file:
+        with open('data/projects/{0}/logs/commits/{1}.{2}'.format(projectName, commitHash, extension), 'w', encoding='utf-8') as file:
             file.write(code)
-        with open('data/projects/{0}/logs/labels/{1}.txt'.format(projectName ,commitHash), 'w') as file:
+        with open('data/projects/{0}/logs/labels/{1}.txt'.format(projectName , commitHash), 'w', encoding='utf-8') as file:
             if containsBug:
                 file.write('1')
             else:
                 file.write('0')
+    # command = 'git stash clear'
+    # subprocess.run(command.split())
 
 
 

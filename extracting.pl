@@ -1,16 +1,11 @@
 use lscp;
 use Config::Tiny;
 
-my $preprocessor = lscp->new;
+$preprocessor = lscp->new;
 # 設定ファイルの読み込み
-my $settings = Config::Tiny->read('settings.ini');
+$settings = Config::Tiny->read('settings.ini');
 # 値へのアクセス
-my $projectName = $settings->{Info}->{project};
-
-if (@ARGV != 1) {
-    print "arg error: Input a target project name.";
-    exit(0);
-}
+$projectName = $settings->{Info}->{project};
 
 $preprocessor->setOption("logLevel", "error");
 $preprocessor->setOption("inPath", "data/projects/" . $projectName . "/logs/commits");
