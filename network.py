@@ -14,16 +14,18 @@ from sklearn.model_selection import train_test_split
 import glob
 import pandas as pd
 import random
+import matplotlib
+matplotlib.use('Agg') # -----(1)
+import matplotlib.pyplot as plt
 
 # データセット読み込み
 def loadDataset(x_directory, y_directory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(x_directory, extension)))
     dataset = []
     labels = []
+    index = 1
     for fileName in fileList:
-        # with open(fileName, 'r') as file:
-        #     # 末尾改行削除+改行区切り
-        #     dataset.append(file.read().rstrip('\n').split('\n'))
+        print(index, '/', len(fileList))
         code = np.loadtxt(fileName, dtype='int')
         if code.size < 2: # 2単語未満の差分ファイルは無視
             continue
@@ -32,6 +34,7 @@ def loadDataset(x_directory, y_directory, extension):
         root, ext = os.path.splitext(fileName)
         basename = os.path.basename(root)
         labels.append(np.loadtxt(y_directory + '/' + basename + '.txt', dtype='int'))
+        index += 1
     # データ数を均一にする
     label0 = labels.count(0)
     label1 = len(labels) - label0
@@ -54,13 +57,14 @@ def loadDataset(x_directory, y_directory, extension):
     return np.array(dataset), np.array(labels)
 
 if __name__ == '__main__':
-    #コア数の取得(CPU)
+    # コア数の取得(CPU)
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     core_num = mp.cpu_count()
     config = tf.ConfigProto(
         inter_op_parallelism_threads=core_num,
         intra_op_parallelism_threads=core_num)
     sess = tf.Session(config=config)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     extension = setting.get('settings.ini', 'Info', 'extension')
     projectName = setting.get('settings.ini', 'Info', 'project')
     corpus = pd.read_csv('data/projects/{0}/corpus.csv'.format(projectName))
@@ -79,7 +83,6 @@ if __name__ == '__main__':
         value=0)
     a, b = x_data.shape
     x_data = x_data.reshape(a, b, 1)
-    # y_data = loadDataset('data/projects/{0}/logs/labels'.format(projectName), 'txt')
     x_data = np.array(x_data)
     y_data = np.array(y_data)
     y_data = to_categorical(y_data, 2)
@@ -88,7 +91,7 @@ if __name__ == '__main__':
 
     embedding_table = np.load('data/projects/{0}/logs/embedding_table.npy'.format(projectName))
 
-    input = Input(shape=(max_len, 1)) # 入力は1 * n
+    input = Input(shape=(max_len, 1)) # 入力は1 * 2000
 
     x = Embedding(input_dim=vocab_size,
                 output_dim=input_dim,
@@ -127,12 +130,33 @@ if __name__ == '__main__':
             to_file='data/models/model.png',
             show_shapes=True)
     history = model.fit(x_train, y_train,
+            validation_split=0.2,
             batch_size=64,
-            epochs=1,
+            epochs=15,
             verbose=1)
     score = model.evaluate(x_test, y_test)
     print(score) # 評価
     yaml_string = model.to_yaml()
     with open('data/projects/{0}/logs/model.yaml'.format(projectName), 'w') as file: # モデルの保存
         file.write(yaml_string)
-    model.save_weights('data/projects/{0}/logs/weights.h5'.format(projectName)) # 学習結果の保存
+    model.save_weights('data/projects/{0}/logs/weights.h5'.format(projectName))  # 学習結果の保存
+    model.save('data/projects/{0}/logs/model.h5'.format(projectName))
+    #Accuracy
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    # save as png
+    plt.savefig('data/projects/{0}/logs/model_accuracy.png'.format(projectName))
+    plt.clf()
+    #loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    # save as png
+    plt.savefig('data/projects/{0}/logs/model_loss.png'.format(projectName))

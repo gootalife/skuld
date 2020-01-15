@@ -35,3 +35,13 @@ python embedding.py
 ```
 python network.py
 ```
+
+学習済みモデルの使用
+```
+python prediction.py
+```
+
+ROC曲線の出力
+```
+python excel_to_ROCcurve.py -i {ファイル名} -x {シート番号}
+```
