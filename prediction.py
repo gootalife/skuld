@@ -11,7 +11,6 @@ from tensorflow.keras.utils import to_categorical
 import yaml
 import csv
 
-
 # データセット読み込み
 def loadDataset(x_directory, y_directory, extension):
     fileList = sorted(glob.glob('{0}/*.{1}'.format(x_directory, extension)))
@@ -21,10 +20,10 @@ def loadDataset(x_directory, y_directory, extension):
     wordCount = []
     index = 1
     for fileName in fileList:
-        print(index, '/', len(fileList))
         code = np.loadtxt(fileName, dtype='int')
         if code.size < 2: # 2単語未満の差分ファイルは無視
             continue
+        print(index, '/', len(fileList), fileName)
         dataset.append(code.tolist())
         # 対応するラベルの取得
         root, ext = os.path.splitext(fileName)
@@ -55,21 +54,23 @@ def loadDataset(x_directory, y_directory, extension):
     return np.array(dataset), np.array(labels), commitHash, wordCount
 
 if __name__ == '__main__':
-    # コア数の取得(CPU)
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    core_num = mp.cpu_count()
-    config = tf.ConfigProto(
-        inter_op_parallelism_threads=core_num,
-        intra_op_parallelism_threads=core_num)
-    sess = tf.Session(config=config)
-    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+    # # コア数の取得(CPU)
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    # core_num = mp.cpu_count()
+    # config = tf.ConfigProto(
+    #     inter_op_parallelism_threads=core_num,
+    #     intra_op_parallelism_threads=core_num)
+    # sess = tf.Session(config=config)
+    # tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     extension = setting.get('settings.ini', 'Info', 'extension')
     projectName = setting.get('settings.ini', 'Info', 'project')
+    cv_case = setting.get('settings.ini', 'Info', 'cv_case')
     data_dir = setting.get('settings.ini', 'Test', 'data_dir')
-
+    for i in range(10):
+        os.makedirs('data/tests/{0}/case{1}'.format(projectName, i + 1), exist_ok=True)
     max_len = 2000
-    x_data, y_data, commitHash, wordCount = loadDataset('data/test/{0}/inputs'.format(data_dir),
-                                'data/test/{0}/labels'.format(data_dir), extension)
+    x_data, y_data, commitHash, wordCount = loadDataset('data/tests/{0}/inputs'.format(data_dir),
+                                'data/tests/{0}/labels'.format(data_dir), extension)
     x_data = keras.preprocessing.sequence.pad_sequences(
         x_data,
         maxlen=max_len,
@@ -124,6 +125,6 @@ if __name__ == '__main__':
     data.append([tp, tn, fp, fn])
     data.append(['tp_rate', 'tn_rate', 'fp_rate', 'fn_rate', 'accuracy'])
     data.append([tp / (tp + fn), tn / (fp + tn), fp / (fp + tn), fn / (tp + fn), (tp + tn) / (tp + fp + fn + tn)])
-    with open('data/test/{0}/result.csv'.format(data_dir), 'w', encoding='utf-8') as f:
+    with open('data/tests/{0}/case{1}/result.csv'.format(data_dir, cv_case), 'w', encoding='utf-8') as f:
         writer = csv.writer(f, lineterminator="\n")
         writer.writerows(data)

@@ -7,6 +7,10 @@
 [Info]
 extension = java # 対象ファイルの拡張子
 project = hadoop # 対象プロジェクト名
+cv_case = 1 # クロスバリデーションのケース番号
+
+[Test]
+data_dir = hadoop # 学習済みモデルへのテスト入力フォルダ(testsフォルダ以下)
 ```
 * extension … 取得するファイルの拡張子を指定
 * project … 対象とするプロジェクトの名前
@@ -26,9 +30,19 @@ perl extracting.pl
 python preprocessing.py
 ```
 
+使用できないデータの移動
+```
+python remove.py
+```
+
 埋め込み表現の学習
 ```
 python embedding.py
+```
+
+学習用データとテスト用データのk分割 k = 10
+```
+python split.py
 ```
 
 学習の実行
@@ -44,4 +58,5 @@ python prediction.py
 ROC曲線の出力
 ```
 python excel_to_ROCcurve.py -i {ファイル名} -x {シート番号}
+python excel_to_ROCcurve.py -i ROCcurve.xlsx -x 0
 ```

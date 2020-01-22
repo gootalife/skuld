@@ -19,12 +19,19 @@ matplotlib.use('Agg') # -----(1)
 import matplotlib.pyplot as plt
 
 # データセット読み込み
-def loadDataset(x_directory, y_directory, extension):
-    fileList = sorted(glob.glob('{0}/*.{1}'.format(x_directory, extension)))
+def loadDataset(x_directory, y_directory, extension, cv_case):
+    fileList = sorted(glob.glob('{0}/converted/*.{1}'.format(x_directory, extension)))
+    cvFilePath = sorted(glob.glob('{0}/cv{1}/*.{2}'.format(x_directory, cv_case, extension)))
+    cvFileList = []
+    for cvfilepath in cvFilePath:
+        cvFileList.append(os.path.basename(cvfilepath))
     dataset = []
     labels = []
     index = 1
     for fileName in fileList:
+        # 訓練用データは学習対象から除外
+        if os.path.basename(fileName) in cvFileList:
+            continue
         print(index, '/', len(fileList))
         code = np.loadtxt(fileName, dtype='int')
         if code.size < 2: # 2単語未満の差分ファイルは無視
@@ -57,23 +64,24 @@ def loadDataset(x_directory, y_directory, extension):
     return np.array(dataset), np.array(labels)
 
 if __name__ == '__main__':
-    # コア数の取得(CPU)
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    core_num = mp.cpu_count()
-    config = tf.ConfigProto(
-        inter_op_parallelism_threads=core_num,
-        intra_op_parallelism_threads=core_num)
-    sess = tf.Session(config=config)
-    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+    # # コア数の取得(CPU)
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    # core_num = mp.cpu_count()
+    # config = tf.ConfigProto(
+    #     inter_op_parallelism_threads=core_num,
+    #     intra_op_parallelism_threads=core_num)
+    # sess = tf.Session(config=config)
+    # tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
     extension = setting.get('settings.ini', 'Info', 'extension')
     projectName = setting.get('settings.ini', 'Info', 'project')
+    cv_case = setting.get('settings.ini', 'Info', 'cv_case')
     corpus = pd.read_csv('data/projects/{0}/corpus.csv'.format(projectName))
     vocab_size = corpus['1'].max() + 1  # 単語上限
     input_dim = 128  # ベクトルの次元数
     max_len = 2000
 
-    x_data, y_data = loadDataset('data/projects/{0}/logs/converted'.format(projectName),
-                        'data/projects/{0}/logs/labels'.format(projectName), extension)
+    x_data, y_data = loadDataset('data/projects/{0}/logs'.format(projectName),
+                        'data/projects/{0}/logs/labels'.format(projectName), extension, cv_case)
     x_data = keras.preprocessing.sequence.pad_sequences(
         x_data,
         maxlen=max_len,
@@ -87,7 +95,9 @@ if __name__ == '__main__':
     y_data = np.array(y_data)
     y_data = to_categorical(y_data, 2)
     # 訓練データ80%,テストデータ20%に分割
-    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2)
+    # x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2)
+    x_train = x_data
+    y_train = y_data
 
     embedding_table = np.load('data/projects/{0}/logs/embedding_table.npy'.format(projectName))
 
@@ -130,33 +140,37 @@ if __name__ == '__main__':
             to_file='data/models/model.png',
             show_shapes=True)
     history = model.fit(x_train, y_train,
-            validation_split=0.2,
             batch_size=64,
             epochs=15,
             verbose=1)
-    score = model.evaluate(x_test, y_test)
-    print(score) # 評価
+    # history = model.fit(x_train, y_train,
+    #         validation_split=0.2,
+    #         batch_size=64,
+    #         epochs=15,
+    #         verbose=1)
+    # score = model.evaluate(x_test, y_test)
+    # print(score) # 評価
     yaml_string = model.to_yaml()
     with open('data/projects/{0}/logs/model.yaml'.format(projectName), 'w') as file: # モデルの保存
         file.write(yaml_string)
     model.save_weights('data/projects/{0}/logs/weights.h5'.format(projectName))  # 学習結果の保存
     model.save('data/projects/{0}/logs/model.h5'.format(projectName))
     #Accuracy
-    plt.plot(history.history['acc'])
-    plt.plot(history.history['val_acc'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    # plt.plot(history.history['acc'])
+    # plt.plot(history.history['val_acc'])
+    # plt.title('model accuracy')
+    # plt.ylabel('accuracy')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
     # save as png
-    plt.savefig('data/projects/{0}/logs/model_accuracy.png'.format(projectName))
-    plt.clf()
+    # plt.savefig('data/projects/{0}/logs/model_accuracy.png'.format(projectName))
+    # plt.clf()
     #loss
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    # plt.plot(history.history['loss'])
+    # plt.plot(history.history['val_loss'])
+    # plt.title('model loss')
+    # plt.ylabel('loss')
+    # plt.xlabel('epoch')
+    # plt.legend(['train', 'test'], loc='upper left')
     # save as png
-    plt.savefig('data/projects/{0}/logs/model_loss.png'.format(projectName))
+    # plt.savefig('data/projects/{0}/logs/model_loss.png'.format(projectName))

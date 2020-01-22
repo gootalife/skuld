@@ -90,6 +90,8 @@ if __name__ == '__main__':
     os.makedirs('data/projects/{0}/logs/labels'.format(projectName), exist_ok=True)
     os.makedirs('data/projects/{0}/logs/converted'.format(projectName), exist_ok=True)
     os.makedirs('data/projects/{0}/logs/preprocessed'.format(projectName), exist_ok=True)
+    os.makedirs('data/projects/{0}/logs/test_data'.format(projectName), exist_ok=True)
+    os.makedirs('data/projects/{0}/logs/trash_data'.format(projectName), exist_ok=True)
     commitLogs = pd.read_csv('data/projects/{0}/{1}.csv'.format(projectName, projectName))
     # ディレクトリ情報の保持
     currentDirectory = os.getcwd()

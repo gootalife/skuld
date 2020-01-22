@@ -60,13 +60,13 @@ def vectorMapping(convertedCodes, corpus, projectName):
     np.save('data/projects/{0}/logs/embedding_table.npy'.format(projectName), table)  # 保存
 
 if __name__ == '__main__':
-    #コア数の取得(CPU)
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    core_num = mp.cpu_count()
-    config = tf.ConfigProto(
-        inter_op_parallelism_threads=core_num,
-        intra_op_parallelism_threads=core_num)
-    sess = tf.Session(config=config)
+    # #コア数の取得(CPU)
+    # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    # core_num = mp.cpu_count()
+    # config = tf.ConfigProto(
+    #     inter_op_parallelism_threads=core_num,
+    #     intra_op_parallelism_threads=core_num)
+    # sess = tf.Session(config=config)
 
     extension = setting.get('settings.ini', 'Info', 'extension')
     projectName = setting.get('settings.ini', 'Info', 'project')
