@@ -18,31 +18,11 @@ matplotlib.use('Agg') # -----(1)
 import matplotlib.pyplot as plt
 import sys
 import json
+from itertools import chain
 
-# データセット読み込み
-def loadDataset(x_directory, y_directory, cv_case):
-    fileList = sorted(glob.glob('{0}/converted/*.txt'.format(x_directory)))
-    cvFilePath = sorted(glob.glob('{0}/cv{1}/*.txt'.format(x_directory, cv_case)))
-    cvFileList = []
-    for cvfilepath in cvFilePath:
-        cvFileList.append(os.path.basename(cvfilepath))
-    dataset = []
-    labels = []
-    index = 1
-    for fileName in fileList:
-        # 訓練用データは学習対象から除外
-        if os.path.basename(fileName) in cvFileList:
-            continue
-        print(index, '/', len(fileList))
-        code = np.loadtxt(fileName, dtype='int')
-        if code.size < 2: # 2単語以下の差分ファイルは無視
-            continue
-        dataset.append(code.tolist())
-        # 対応するラベルの取得
-        root, ext = os.path.splitext(fileName)
-        basename = os.path.basename(root)
-        labels.append(np.loadtxt(y_directory + '/' + basename + '.txt', dtype='int'))
-        index += 1
+def randonUndersampling(dataset, labels):
+    if len(dataset) < 1:
+        return dataset, labels, commitHash, wordCount
     # データ数を均一にする
     label0 = labels.count(0)
     label1 = len(labels) - label0
@@ -62,6 +42,70 @@ def loadDataset(x_directory, y_directory, cv_case):
             labels.pop(index)
             print(label0, labels.count(1))
             label1 -= 1
+    return dataset, labels
+
+# データセット読み込み
+def loadDataset(x_directory, y_directory, cv_case):
+    fileList = sorted(glob.glob('{0}/converted/*.txt'.format(x_directory)))
+    cvFilePath = sorted(glob.glob('{0}/cv{1}/*.txt'.format(x_directory, cv_case)))
+    cvFileList = []
+    for cvfilepath in cvFilePath:
+        cvFileList.append(os.path.basename(cvfilepath))
+    dataset = [[],[],[],[],[],[],[],[],[],[],[]]
+    labels = [[],[],[],[],[],[],[],[],[],[],[]]
+    index = 1
+    for fileName in fileList:
+        # 訓練用データは学習対象から除外
+        if os.path.basename(fileName) in cvFileList:
+            continue
+        print(index, '/', len(fileList))
+        code = np.loadtxt(fileName, dtype='int')
+        if code.size < 2: # 2単語以下の差分ファイルは無視
+            continue
+        # 対応するラベルの取得
+        root, ext = os.path.splitext(fileName)
+        basename = os.path.basename(root)
+        label = np.loadtxt(y_directory + '/' + basename + '.txt', dtype='int')
+        if code.size <= 199:
+            dataset[0].append(code.tolist())
+            labels[0].append(label)
+        elif code.size <= 399:
+            dataset[1].append(code.tolist())
+            labels[1].append(label)
+        elif code.size <= 599:
+            dataset[2].append(code.tolist())
+            labels[2].append(label)
+        elif code.size <= 799:
+            dataset[3].append(code.tolist())
+            labels[3].append(label)
+        elif code.size <= 999:
+            dataset[4].append(code.tolist())
+            labels[4].append(label)
+        elif code.size <= 1199:
+            dataset[5].append(code.tolist())
+            labels[5].append(label)
+        elif code.size <= 1399:
+            dataset[6].append(code.tolist())
+            labels[6].append(label)
+        elif code.size <= 1599:
+            dataset[7].append(code.tolist())
+            labels[7].append(label)
+        elif code.size <= 1799:
+            dataset[8].append(code.tolist())
+            labels[8].append(label)
+        elif code.size <= 1999:
+            dataset[9].append(code.tolist())
+            labels[9].append(label)
+        else:
+            dataset[10].append(code.tolist())
+            labels[10].append(label)
+        index += 1
+    # データ数を均一にする
+    for i in range(11):
+        dataset[i], labels[i] = randonUndersampling(dataset[i], labels[i])
+    # 平坦化
+    dataset = list(chain.from_iterable(dataset))
+    labels = list(chain.from_iterable(labels))
     return np.array(dataset), np.array(labels)
 
 if __name__ == '__main__':
@@ -83,7 +127,7 @@ if __name__ == '__main__':
     corpus = pd.read_csv('data/projects/{0}/corpus.csv'.format(projectName))
     vocab_size = corpus['1'].max() + 1  # 単語上限
     input_dim = 128  # ベクトルの次元数
-    max_len = 2000
+    max_len = 599
 
     x_data, y_data = loadDataset('data/projects/{0}/logs'.format(projectName),
                         'data/projects/{0}/logs/labels'.format(projectName), cv_case)

@@ -12,28 +12,11 @@ import csv
 import sys
 import xlwt
 import json
+from itertools import chain
 
-# データセット読み込み
-def loadDataset(x_directory, y_directory):
-    fileList = sorted(glob.glob('{0}/*.txt'.format(x_directory)))
-    dataset = []
-    labels = []
-    commitHash = []
-    wordCount = []
-    index = 1
-    for fileName in fileList:
-        code = np.loadtxt(fileName, dtype='int')
-        if code.size < 2: # 2単語以下の差分ファイルは無視
-            continue
-        print(index, '/', len(fileList), fileName)
-        dataset.append(code.tolist())
-        # 対応するラベルの取得
-        root, ext = os.path.splitext(fileName)
-        basename = os.path.basename(root)
-        labels.append(np.loadtxt(y_directory + '/' + basename + '.txt', dtype='int'))
-        commitHash.append(basename)
-        wordCount.append(code.size)
-        index += 1
+def randonUndersampling(dataset, labels, commitHash, wordCount):
+    if len(dataset) < 1:
+        return dataset, labels, commitHash, wordCount
     # データ数を均一にする
     label0 = labels.count(0)
     label1 = len(labels) - label0
@@ -57,6 +40,89 @@ def loadDataset(x_directory, y_directory):
             wordCount.pop(index)
             print(label0, labels.count(1))
             label1 -= 1
+    return dataset, labels, commitHash, wordCount
+
+# データセット読み込み
+def loadDataset(x_directory, y_directory):
+    fileList = sorted(glob.glob('{0}/*.txt'.format(x_directory)))
+    dataset = [[],[],[],[],[],[],[],[],[],[],[]]
+    labels = [[],[],[],[],[],[],[],[],[],[],[]]
+    commitHash = [[],[],[],[],[],[],[],[],[],[],[]]
+    wordCount = [[],[],[],[],[],[],[],[],[],[],[]]
+    index = 1
+    for fileName in fileList:
+        code = np.loadtxt(fileName, dtype='int')
+        if code.size < 2: # 2単語以下の差分ファイルは無視
+            continue
+        print(index, '/', len(fileList), fileName)
+        # 対応するラベルの取得
+        root, ext = os.path.splitext(fileName)
+        basename = os.path.basename(root)
+        label = np.loadtxt(y_directory + '/' + basename + '.txt', dtype='int')
+        if code.size <= 199:
+            dataset[0].append(code.tolist())
+            labels[0].append(label)
+            commitHash[0].append(basename)
+            wordCount[0].append(code.size)
+        elif code.size <= 399:
+            dataset[1].append(code.tolist())
+            labels[1].append(label)
+            commitHash[1].append(basename)
+            wordCount[1].append(code.size)
+        elif code.size <= 599:
+            dataset[2].append(code.tolist())
+            labels[2].append(label)
+            commitHash[2].append(basename)
+            wordCount[2].append(code.size)
+        elif code.size <= 799:
+            dataset[3].append(code.tolist())
+            labels[3].append(label)
+            commitHash[3].append(basename)
+            wordCount[3].append(code.size)
+        elif code.size <= 999:
+            dataset[4].append(code.tolist())
+            labels[4].append(label)
+            commitHash[4].append(basename)
+            wordCount[4].append(code.size)
+        elif code.size <= 1199:
+            dataset[5].append(code.tolist())
+            labels[5].append(label)
+            commitHash[5].append(basename)
+            wordCount[5].append(code.size)
+        elif code.size <= 1399:
+            dataset[6].append(code.tolist())
+            labels[6].append(label)
+            commitHash[6].append(basename)
+            wordCount[6].append(code.size)
+        elif code.size <= 1599:
+            dataset[7].append(code.tolist())
+            labels[7].append(label)
+            commitHash[7].append(basename)
+            wordCount[7].append(code.size)
+        elif code.size <= 1799:
+            dataset[8].append(code.tolist())
+            labels[8].append(label)
+            commitHash[8].append(basename)
+            wordCount[8].append(code.size)
+        elif code.size <= 1999:
+            dataset[9].append(code.tolist())
+            labels[9].append(label)
+            commitHash[9].append(basename)
+            wordCount[9].append(code.size)
+        else:
+            dataset[10].append(code.tolist())
+            labels[10].append(label)
+            commitHash[10].append(basename)
+            wordCount[10].append(code.size)
+        index += 1
+    # データ数を均一にする
+    for i in range(11):
+        dataset[i], labels[i], commitHash[i], wordCount[i] = randonUndersampling(dataset[i], labels[i], commitHash[i], wordCount[i])
+    # 平坦化
+    dataset = list(chain.from_iterable(dataset))
+    labels = list(chain.from_iterable(labels))
+    commitHash = list(chain.from_iterable(commitHash))
+    wordCount = list(chain.from_iterable(wordCount))
     return np.array(dataset), np.array(labels), commitHash, wordCount
 
 if __name__ == '__main__':
@@ -79,7 +145,7 @@ if __name__ == '__main__':
         testDir = settings["testDir"]
     for i in range(10):
         os.makedirs('data/tests/{0}/case{1}'.format(projectName, i + 1), exist_ok=True)
-    max_len = 2000
+    max_len = 599
     x_data, y_data, commitHash, wordCount = loadDataset('data/tests/{0}/case{1}/cv{2}'.format(testDir, cv_case, cv_case),
                                 'data/tests/{0}/labels'.format(testDir))
     x_data = keras.preprocessing.sequence.pad_sequences(

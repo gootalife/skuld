@@ -1,0 +1,5 @@
+{
+    "projectName": "hadoop",
+    "extensions": [".java", ".c", ".h", ".cpp", ".hpp", ".cxx", ".hxx"],
+    "testDir": "hadoop2"
+}

@@ -1,11 +1,20 @@
+use utf8;
 use lscp;
 use Config::Tiny;
+use Encode;
+use JSON;
+use File::Slurp;
+
+# 設定ファイルの読み込み
+my $file = 'settings.json';
+$json = read_file($file, binmode => ':utf8');
+my $settings = decode_json($json);
+$projectName = $settings->{'projectName'};
+printf "%s", $projectName;
 
 $preprocessor = lscp->new;
-# 設定ファイルの読み込み
 $settings = Config::Tiny->read('settings.ini');
 # 値へのアクセス
-$projectName = $settings->{Info}->{project};
 
 $preprocessor->setOption("logLevel", "error");
 $preprocessor->setOption("inPath", "data/projects/" . $projectName . "/logs/commits");

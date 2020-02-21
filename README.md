@@ -2,15 +2,13 @@
 卒業研究
 
 ## 使い方
-設定ファイル settings.ini
-```ini
-[Info]
-extension = java # 対象ファイルの拡張子
-project = hadoop # 対象プロジェクト名
-cv_case = 1 # クロスバリデーションのケース番号
-
-[Test]
-data_dir = hadoop # 学習済みモデルへのテスト入力フォルダ(testsフォルダ以下)
+設定ファイル settings.json
+```json
+{
+    "projectName": "camel", # 対象プロジェクト名
+    "extensions": [".java", ".c", ".h", ".cpp", ".hpp", ".cxx", ".hxx"], # 対象ファイルの拡張子
+    "testDir": "camel" # 学習済みモデルへのテスト入力フォルダ(testsフォルダ以下)
+}
 ```
 * extension … 取得するファイルの拡張子を指定
 * project … 対象とするプロジェクトの名前

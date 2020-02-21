@@ -1,13 +1,13 @@
 from tensorflow import keras
 import collections
 import glob
-import setting
 import os
 import numpy as np
+import json
 
 # ソースコード読み込み
-def readAllSourceCodes(directory, extension):
-    fileList = sorted(glob.glob('{0}/*.{1}'.format(directory, extension)))
+def readAllSourceCodes(directory):
+    fileList = sorted(glob.glob('{0}/*.txt'.format(directory)))
     sourceCodes = []
     for fileName in fileList:
         with open(fileName, 'r') as file:
@@ -45,8 +45,8 @@ def makeCorpus(vocabulary, directory):
     return corpus
 
 # ソースコード片の数値変換
-def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
-    fileList = sorted(glob.glob('{0}/*.{1}'.format(inDirectory, extension)))
+def convert(corpus, sourceCodes, inDirectory, outDirectory):
+    fileList = sorted(glob.glob('{0}/*.txt'.format(inDirectory)))
     index = 0
     for sourceCode in sourceCodes:
         convertedCode = []
@@ -64,9 +64,13 @@ def convert(corpus, sourceCodes, inDirectory, outDirectory, extension):
         index += 1
 
 if __name__ == '__main__':
-    extension = setting.get('settings.ini', 'Info', 'extension')
-    projectName = setting.get('settings.ini', 'Info', 'project')
-    sourceCodes = readAllSourceCodes('data/projects/{0}/logs/preprocessed'.format(projectName), extension)
+    extensions = []
+    projectName = ""
+    with open('settings.json', 'r', encoding='utf-8') as file:
+        settings = json.loads(file.read())
+        extension = settings["extensions"]
+        projectName = settings["projectName"]
+    sourceCodes = readAllSourceCodes('data/projects/{0}/logs/preprocessed'.format(projectName))
     vocabulary = vectorize(sourceCodes)
     corpus = makeCorpus(vocabulary, 'data/projects/{0}/corpus.csv'.format(projectName))
-    convert(corpus, sourceCodes, 'data/projects/{0}/logs/preprocessed'.format(projectName), 'data/projects/{0}/logs/converted'.format(projectName), extension)
+    convert(corpus, sourceCodes, 'data/projects/{0}/logs/preprocessed'.format(projectName), 'data/projects/{0}/logs/converted'.format(projectName))
